@@ -7,10 +7,16 @@ package be.mobilebuddies.tictactoe.controller;
  *
  */
 public enum Level {
-	BEGINNER(1), INTERMEDIATE(2), ADVANCED(3);
+	BEGINNER(1, "Beginner"), INTERMEDIATE(2, "Intermediate"), ADVANCED(3, "Advanced");
 	private final int value;
-	Level(int value) {
+	private final String label;
+	Level(int value, String label) {
 		this.value = value;
+		this.label = label;
+	}
+	
+	public String toString() {
+		return label;
 	}
 	
 	public static Level getByValue(int value) {

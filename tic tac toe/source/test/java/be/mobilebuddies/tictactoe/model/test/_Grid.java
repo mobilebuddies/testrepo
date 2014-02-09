@@ -62,10 +62,19 @@ public class _Grid {
 		assertNotSame(CellValue.EMPTY, grid.getValue(0, 0));
 	}
 	
+	@Test
+	public void testFullGrid() {
+		assertFalse(grid.isFull());
+		for (int row = 0; row < rows; row ++) {
+			for (int col = 0; col < cols; col ++) {
+				grid.setValue(row, col, CellValue.COMPUTER);
+			}
+		}
+		assertTrue(grid.isFull());
+	}
 	@AfterClass
 	public static void cleanupGrid() throws Exception {
 		System.out.println(grid);
 		grid.initialize();
 	}
-	
 }

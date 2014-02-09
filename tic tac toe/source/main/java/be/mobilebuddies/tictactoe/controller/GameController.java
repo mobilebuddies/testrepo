@@ -1,6 +1,7 @@
 package be.mobilebuddies.tictactoe.controller;
 
 import java.util.Date;
+import java.util.Observable;
 import java.util.Random;
 
 import be.mobilebuddies.tictactoe.model.CellValue;
@@ -12,7 +13,7 @@ import be.mobilebuddies.tictactoe.model.Grid;
  * 
  * @author koen
  */
-public class GameController {
+public class GameController extends Observable {
 
 	private Grid grid;
 	private boolean gameEnded;
@@ -96,39 +97,50 @@ public class GameController {
 	 * </ul>
 	 */
 	public void doComputersMove() {
+		TicTacToeEvent event = new TicTacToeEvent();
+		GridCellEvent cellEvent = null;
+		RowOf3Event rowEvent = null;
 		if (!gameEnded) {
 			if (grid.isFull()) {
 				gameEnded = true;
 			} else {
-				boolean done = false;
-				done = canComputerWin();
-				if (done) {
+				cellEvent = canComputerWin();
+				if (cellEvent != null) {
+					event.withGridCellEvent(cellEvent);
+					rowEvent = detect3InARow();
+					event.withRowOf3Event(rowEvent);
 					gameEnded = true;
 					computerWins ++;
 				} else {
 					if (level == Level.ADVANCED || level == Level.INTERMEDIATE) {
-						done = canComputerPreventWinning();	
+						cellEvent = canComputerPreventWinning();	
 					}
-					if (!done && level == Level.ADVANCED) {
-						done = canComputerMake2();
+					if (cellEvent == null && level == Level.ADVANCED) {
+						cellEvent = canComputerMake2();
 					}
-					if (!done & level == Level.ADVANCED) {
-						done = canComputerPrevent2();
+					if (cellEvent == null & level == Level.ADVANCED) {
+						cellEvent = canComputerPrevent2();
 					}
-					if (!done) {
-						if (makeRandomComputerMove()) {
+					if (cellEvent == null) {
+						cellEvent = makeRandomComputerMove();
+						rowEvent = detect3InARow();
+						if (rowEvent != null) {
 							gameEnded = true;
 							computerWins ++;
-						} else {
-							if (grid.isFull()) {
-								gameEnded = true;
-							}
+							event.withRowOf3Event(rowEvent);
 						}
 					}
+					event.withGridCellEvent(cellEvent);
 					computersTurn = false;
-				}				
+				}
+				if (grid.isFull()) {
+					gameEnded = true;
+				}
+				// dispatch the event
+				this.setChanged();
+				this.notifyObservers(event);
 			}
-		}		
+		}
 	}
 	
 	/**
@@ -137,22 +149,22 @@ public class GameController {
 	 * 
 	 * @return true if the winning move is made, otherwise false
 	 */
-	public boolean canComputerWin() {
+	public GridCellEvent canComputerWin() {
 		// row per row: can we score 3 in a row?
-		boolean canWin = false;
-		canWin = canMake3Horizontal(CellValue.COMPUTER);
-		if (!canWin) {
+		GridCellEvent event = null;
+		event = canMake3Horizontal(CellValue.COMPUTER);
+		if (event == null) {
 			// column per column: can we score 3 in a column?
-			canWin = canMake3Vertical(CellValue.COMPUTER);
+			event = canMake3Vertical(CellValue.COMPUTER);
 		}
-		if (!canWin) {
-			canWin = canMake3DiagonalUp(CellValue.COMPUTER);
+		if (event == null) {
+			event = canMake3DiagonalUp(CellValue.COMPUTER);
 		}
-		if (!canWin) {
-			canWin = canMake3DiagonalDown(CellValue.COMPUTER);
+		if (event == null) {
+			event = canMake3DiagonalDown(CellValue.COMPUTER);
 		}
 		
-		return canWin;
+		return event;
 	}
 	
 	/**
@@ -160,24 +172,25 @@ public class GameController {
 	 * If so, the computer will fill that space, either scoring
 	 * 3 himself or preventing the player from scoring 3 in a row.
 	 * 
-	 * @return if a cell is filled, otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	private boolean canMake3Horizontal(CellValue who) {
-		boolean canWin = false;
+	private GridCellEvent canMake3Horizontal(CellValue who) {
+		GridCellEvent event = null;
 		for (int row = 0; row < grid.getRows(); row ++) {
 			for (int col = 0; col + 2 < grid.getCols(); col ++) {
 				// from the current cell: look 2 cells ahead (if possible)
-				canWin = canMake3(who, row, col, row, col + 1, row, col + 2);
+				event = canMake3(who, row, col, row, col + 1, row, col + 2);
 
-				if (canWin) {
+				if (event != null) {
 					break;
 				}
 			}
-			if (canWin) {
+			if (event != null) {
 				break;
 			}
 		}
-		return canWin;
+		return event;
 	}
 
 	/**
@@ -185,24 +198,25 @@ public class GameController {
 	 * If so, the computer will fill that space, either scoring
 	 * 3 himself or preventing the player from scoring 3 in a row.
 	 *  
-	 * @return true if a cell is filled, otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	private boolean canMake3Vertical(CellValue who) {
-		boolean canWin = false;
+	private GridCellEvent canMake3Vertical(CellValue who) {
+		GridCellEvent event = null;
 		for (int col = 0; col < grid.getCols(); col ++) {
 			for (int row = 0; row + 2 < grid.getRows(); row ++) {
 				// from the current cell: look 2 cells ahead (if possible)
-					canWin = canMake3(who, row, col, row + 1, col, row + 2, col);
+					event = canMake3(who, row, col, row + 1, col, row + 2, col);
 
-				if (canWin) {
+				if (event != null) {
 					break;
 				}
 			}
-			if (canWin) {
+			if (event != null) {
 				break;
 			}
 		}
-		return canWin;
+		return event;
 	}
 	
 	/**
@@ -218,22 +232,29 @@ public class GameController {
 	 * @param next2Row row of the 3rd cell
 	 * @param next2Col column of the 3rd cell
 	 * 
-	 * @return true if a cell has been filled (either scoring 3 or preventing 3), otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	private boolean canMake3(CellValue who, int curRow, int curCol, int nextRow, int nextCol, int next2Row, int next2Col) {
-		boolean cellFilled = false;
+	private GridCellEvent canMake3(CellValue who, int curRow, int curCol, int nextRow, int nextCol, int next2Row, int next2Col) {
+		GridCellEvent event = null;
 		if (grid.getValue(curRow, curCol) == who) {
 			// X _ X
 			if (grid.getValue(nextRow, nextCol) == CellValue.EMPTY && grid.getValue(next2Row, next2Col) == who) {
 				// Fill computer here! to win or to prevent winning!
 				grid.setValue(nextRow, nextCol, CellValue.COMPUTER);
-				cellFilled = true; 
+				event = new GridCellEvent()
+					.withValue(CellValue.COMPUTER)
+					.withRow(nextRow)
+					.withCol(nextCol);
 			} else {
 				// X X _
 				if (grid.getValue(nextRow, nextCol) == who && grid.getValue(next2Row, next2Col) == CellValue.EMPTY) {
 					// Fill computer here! to win or to prevent winning!
 					grid.setValue(next2Row, next2Col, CellValue.COMPUTER);
-					cellFilled = true;
+					event = new GridCellEvent()
+						.withValue(CellValue.COMPUTER)
+						.withRow(next2Row)
+						.withCol(next2Col);
 				}
 			}
 		} else {
@@ -242,13 +263,16 @@ public class GameController {
 				if (grid.getValue(nextRow, nextCol) == who && grid.getValue(next2Row, next2Col) == who) {
 					// Fill computer here! to win or to prevent winning!
 					grid.setValue(curRow, curCol, CellValue.COMPUTER);
-					cellFilled = true;
+					event = new GridCellEvent()
+						.withValue(CellValue.COMPUTER)
+						.withRow(curRow)
+						.withCol(curCol);
 				}
 			} else {
 				// go to the next cell;
 			}
 		}
-		return cellFilled;
+		return event;
 	}
 	
 	/**
@@ -257,22 +281,23 @@ public class GameController {
 	 * If so, the computer will fill that space, either scoring 
 	 * 3 himself or preventing the player from scoring 3 in a row.
 	 * 
-	 * @return true if a cell cell is filled, otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	private boolean canMake3DiagonalDown(CellValue who) {
-		boolean canWin = false;
+	private GridCellEvent canMake3DiagonalDown(CellValue who) {
+		GridCellEvent event = null;
 		for (int row = 0; row + 2 < grid.getRows(); row ++) {
 			for (int col = 0; col + 2 < grid.getCols(); col ++) {
-				canWin = canMake3(who, row, col, row + 1, col + 1, row + 2, col + 2);
-				if (canWin) {
+				event = canMake3(who, row, col, row + 1, col + 1, row + 2, col + 2);
+				if (event != null) {
 					break;
 				}
 			}
-			if (canWin) {
+			if (event != null) {
 				break;
 			}
 		}
-		return canWin;
+		return event;
 	}
 
 	/**
@@ -281,22 +306,23 @@ public class GameController {
 	 * If so, the computer will fill that space, either scoring
 	 * 3 himself or preventing the player from scoring 3 in a row.
 	 * 
-	 * @return true if a cell is filled, otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	private boolean canMake3DiagonalUp(CellValue who) {
-		boolean canWin = false;
+	private GridCellEvent canMake3DiagonalUp(CellValue who) {
+		GridCellEvent event = null;
 		for (int row = grid.getRows() - 1; row - 2 >= 0; row --) {
 			for (int col = 0; col + 2 < grid.getCols(); col ++) {
-				canWin = canMake3(who, row, col, row - 1, col + 1, row - 2, col + 2);
-				if (canWin) {
+				event = canMake3(who, row, col, row - 1, col + 1, row - 2, col + 2);
+				if (event != null) {
 					break;
 				}
 			}
-			if (canWin) {
+			if (event != null) {
 				break;
 			}
 		}
-		return canWin;
+		return event;
 	}
 	
 		
@@ -305,25 +331,25 @@ public class GameController {
 	 * (player has 2 in a row and can score a 3rd one). If so, the move will be 
 	 * made.
 	 * 
-	 * @return true if the computer have prevented the player from winning,  
-	 * otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	public boolean canComputerPreventWinning() {
+	public GridCellEvent canComputerPreventWinning() {
 		// row per row: can we score 3 in a row?
-		boolean canPrevent = false;
-		canPrevent = canMake3Horizontal(CellValue.PLAYER);
-		if (!canPrevent) {
+		GridCellEvent event = null;
+		event = canMake3Horizontal(CellValue.PLAYER);
+		if (event == null) {
 			// column per column: can we score 3 in a column?
-			canPrevent = canMake3Vertical(CellValue.PLAYER);
+			event = canMake3Vertical(CellValue.PLAYER);
 		}
-		if (!canPrevent) {
-			canPrevent = canMake3DiagonalUp(CellValue.PLAYER);
+		if (event == null) {
+			event = canMake3DiagonalUp(CellValue.PLAYER);
 		}
-		if (!canPrevent) {
-			canPrevent = canMake3DiagonalDown(CellValue.PLAYER);
+		if (event == null) {
+			event = canMake3DiagonalDown(CellValue.PLAYER);
 		}
 		
-		return canPrevent;
+		return event;
 	}
 	
 	/**
@@ -340,23 +366,24 @@ public class GameController {
 	 * <p>But not: 
 	 * <pre>X O _</pre>
 	 * 
-	 * @return true if the computer has made 2 in a row, otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	public boolean canComputerMake2() {
+	public GridCellEvent canComputerMake2() {
 		
-		boolean canMake2 = false;
-		canMake2 = canMake2Horizontal(CellValue.COMPUTER);
-		if (!canMake2) {
-			canMake2 = canMake2Vertical(CellValue.COMPUTER);
+		GridCellEvent event = null;
+		event = canMake2Horizontal(CellValue.COMPUTER);
+		if (event == null) {
+			event = canMake2Vertical(CellValue.COMPUTER);
 		}
-		if (!canMake2) {
-			canMake2 = canMake2DiagonalDown(CellValue.COMPUTER);
+		if (event == null) {
+			event = canMake2DiagonalDown(CellValue.COMPUTER);
 		}
-		if (!canMake2) {
-			canMake2 = canMake2DiagonalUp(CellValue.COMPUTER);
+		if (event == null) {
+			event = canMake2DiagonalUp(CellValue.COMPUTER);
 		}
 		
-		return canMake2;
+		return event;
 	}
 
 	/**
@@ -373,24 +400,25 @@ public class GameController {
 	 * <p>But not: 
 	 * <code>O X _</code>
 	 * 
-	 * @return true if the computer has prevented the player from making 2 in a row, otherwise false 
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	public boolean canComputerPrevent2() {
-		boolean canPrevent2 = false;
+	public GridCellEvent canComputerPrevent2() {
+		GridCellEvent event = null;
 
-		canPrevent2 = canMake2Horizontal(CellValue.PLAYER);
-		if (!canPrevent2) {
-			canPrevent2 = canMake2Vertical(CellValue.PLAYER);
+		event = canMake2Horizontal(CellValue.PLAYER);
+		if (event == null) {
+			event = canMake2Vertical(CellValue.PLAYER);
 		}
-		if (!canPrevent2) {
-			canPrevent2 = canMake2DiagonalDown(CellValue.PLAYER);
+		if (event == null) {
+			event = canMake2DiagonalDown(CellValue.PLAYER);
 		}
-		if (!canPrevent2) {
-			canPrevent2 = canMake2DiagonalUp(CellValue.PLAYER);
+		if (event == null) {
+			event = canMake2DiagonalUp(CellValue.PLAYER);
 		}
 		
 		
-		return canPrevent2;
+		return event;
 	}
 	
 	/**
@@ -401,24 +429,25 @@ public class GameController {
 	 * or to prevent the player from preparing 3 in a row.
 	 *  
 	 * @param who the player to check 2 in a row horizontally
-	 * @return true if a cell was filled otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	private boolean canMake2Horizontal(CellValue who) {
-		boolean canMake2 = false;
+	private GridCellEvent canMake2Horizontal(CellValue who) {
+		GridCellEvent event = null;
 		for (int row = 0; row < grid.getRows(); row ++) {
 			for (int col = 0; col + 2 < grid.getCols(); col ++) {
 				// from the current cell: look 2 cells ahead (if possible)
-				canMake2 = canMake2(who, row, col, row, col + 1, row, col + 2);
+				event = canMake2(who, row, col, row, col + 1, row, col + 2);
 
-				if (canMake2) {
+				if (event != null) {
 					break;
 				}
 			}
-			if (canMake2) {
+			if (event != null) {
 				break;
 			}
 		}
-		return canMake2;
+		return event;
 	}
 	/**
 	 * checks whether the specified player can make 2 cells in a row vertically, 
@@ -428,25 +457,26 @@ public class GameController {
 	 * or to prevent the player from preparing 3 in a row.
 	 *  
 	 * @param who the player to check 2 in a row vertically
-	 * @return true if a cell was filled otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
 	
-	private boolean canMake2Vertical(CellValue who) {
-		boolean canMake2 = false;
+	private GridCellEvent canMake2Vertical(CellValue who) {
+		GridCellEvent event = null;
 		for (int col = 0; col < grid.getCols(); col ++) {
 			for (int row = 0; row + 2 < grid.getRows(); row ++) {
 				// from the current cell: look 2 cells ahead (if possible)
-				canMake2 = canMake2(who, row, col, row + 1, col, row + 2, col);
+				event = canMake2(who, row, col, row + 1, col, row + 2, col);
 
-				if (canMake2) {
+				if (event != null) {
 					break;
 				}
 			}
-			if (canMake2) {
+			if (event != null) {
 				break;
 			}
 		}
-		return canMake2;
+		return event;
 
 	}
 	
@@ -458,22 +488,23 @@ public class GameController {
 	 * or to prevent the player from preparing 3 in a row.
 	 *  
 	 * @param who the player to check 2 in a row diagonally up
-	 * @return true if a cell was filled otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	private boolean canMake2DiagonalUp(CellValue who) {
-		boolean canMake2 = false;
+	private GridCellEvent canMake2DiagonalUp(CellValue who) {
+		GridCellEvent event = null;
 		for (int row = grid.getRows() - 1; row - 2 >= 0; row --) {
 			for (int col = 0; col + 2 < grid.getCols(); col ++) {
-				canMake2 = canMake2(who, row, col, row - 1, col + 1, row - 2, col + 2);
-				if (canMake2) {
+				event = canMake2(who, row, col, row - 1, col + 1, row - 2, col + 2);
+				if (event != null) {
 					break;
 				}
 			}
-			if (canMake2) {
+			if (event != null) {
 				break;
 			}
 		}
-		return canMake2;
+		return event;
 	}
 	
 	/**
@@ -484,22 +515,23 @@ public class GameController {
 	 * or to prevent the player from preparing 3 in a row.
 	 *  
 	 * @param who the player to check 2 in a row
-	 * @return true if a cell was filled otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	private boolean canMake2DiagonalDown(CellValue who) {
-		boolean canMake2 = false;
+	private GridCellEvent canMake2DiagonalDown(CellValue who) {
+		GridCellEvent event = null;
 		for (int row = 0; row + 2 < grid.getRows(); row ++) {
 			for (int col = 0; col + 2 < grid.getCols(); col ++) {
-				canMake2 = canMake2(who, row, col, row + 1, col + 1, row + 2, col + 2);
-				if (canMake2) {
+				event = canMake2(who, row, col, row + 1, col + 1, row + 2, col + 2);
+				if (event != null) {
 					break;
 				}
 			}
-			if (canMake2) {
+			if (event != null) {
 				break;
 			}
 		}
-		return canMake2;
+		return event;
 	}
 
 	/**
@@ -516,20 +548,27 @@ public class GameController {
 	 * @param nextCol column of the next cell
 	 * @param next2Row row of the 3rd cell
 	 * @param next2Col column of the 3rd cell
-	 * @return true if a cell was filled otherwise false
+	 * @return an instance of TicTacToeEvent with the cell information filled in if a move is made
+	 * otherwise null
 	 */
-	private boolean canMake2(CellValue who, int curRow, int curCol, int nextRow, int nextCol, int next2Row, int next2Col) {
-		boolean cellFilled = false;
+	private GridCellEvent canMake2(CellValue who, int curRow, int curCol, int nextRow, int nextCol, int next2Row, int next2Col) {
+		GridCellEvent event = null;
 		if (grid.getValue(curRow, curCol) == CellValue.EMPTY) {
 			// _ _ X
 			if (grid.getValue(nextRow, nextCol) == CellValue.EMPTY && grid.getValue(next2Row, next2Col) == who) {
 				grid.setValue(curRow, curCol, CellValue.COMPUTER);
-				cellFilled = true; 
+				event = new GridCellEvent()
+					.withValue(CellValue.COMPUTER)
+					.withRow(curRow)
+					.withCol(curCol);
 			} else {
 				// _ X _
 				if (grid.getValue(nextRow, nextCol) == who && grid.getValue(next2Row, next2Col) == CellValue.EMPTY) {
 					grid.setValue(curRow, curCol, CellValue.COMPUTER);
-					cellFilled = true;
+					event = new GridCellEvent()
+						.withValue(CellValue.COMPUTER)
+						.withRow(curRow)
+						.withCol(curCol);
 				}
 			}
 		} else {
@@ -537,13 +576,16 @@ public class GameController {
 				// X _ _ 
 				if (grid.getValue(nextRow, nextCol) == CellValue.EMPTY && grid.getValue(next2Row, next2Col) == CellValue.EMPTY) {
 					grid.setValue(nextRow, nextCol, CellValue.COMPUTER);
-					cellFilled = true;
+					event = new GridCellEvent()
+						.withValue(CellValue.COMPUTER)
+						.withRow(nextRow)
+						.withCol(nextCol);
 				}
 			} else {
 				// go to the next cell;
 			}
 		}
-		return cellFilled;		
+		return event;
 	}
 	
 	/**
@@ -552,22 +594,22 @@ public class GameController {
 	 * The only check happening here is whether the computer by accident scored 3 in a row... 
 	 * @return true if the computer by accident won the game, otherwise false
 	 */
-	private boolean makeRandomComputerMove() {
+	private GridCellEvent makeRandomComputerMove() {
+		GridCellEvent event = null;
 		boolean done = false;
-		boolean won = false;
 		while (!done) {
 			int row = randomValue.nextInt(grid.getRows());
 			int col = randomValue.nextInt(grid.getCols());
 			if (grid.isEmpty(row, col)) {
 				grid.setValue(row, col, CellValue.COMPUTER);
 				done = true;
-				if (detect3InARow()) {
-					// Computer did the last move, so I assume computer won
-					won = true;
-				}
+				event = new GridCellEvent()
+					.withValue(CellValue.COMPUTER)
+					.withRow(row)
+					.withCol(col);
 			}
 		}
-		return won;
+		return event;
 	}
 	
 	/**
@@ -579,15 +621,32 @@ public class GameController {
 	 * @return true if the specified cell was valid, otherwise false
 	 */
 	public boolean fillCell (int row, int col) {
+		TicTacToeEvent event = new TicTacToeEvent();
 		boolean isValid = false;
 		if (grid.isEmpty(row, col)) {
 			grid.setValue(row, col, CellValue.PLAYER);
 			isValid = true;
-			this.computersTurn = true;
-			gameEnded = detect3InARow();
-			if (gameEnded) {
+			if (grid.isFull()) {
+				gameEnded = true;
+			} else {
+				this.computersTurn = true;				
+			}
+			RowOf3Event rowEvent = detect3InARow();
+			
+			if (rowEvent != null) {
+				event.withRowOf3Event(rowEvent);
+				gameEnded = true;
 				playerWins ++;
 			}
+			GridCellEvent cellEvent = new GridCellEvent()
+				.withRow(row)
+				.withCol(col)
+				.withValue(CellValue.PLAYER);
+			event.withGridCellEvent(cellEvent);
+			setChanged();
+			notifyObservers(event);
+			
+				
 		}
 		return isValid;
 	}
@@ -596,63 +655,69 @@ public class GameController {
 	 * detects whether there are 3 in a row, no matter from whom.
 	 * @return true if there is a winner, otherwise false
 	 */
-	private boolean detect3InARow() {
-		boolean winner = false;
-		winner = has3Horizontal();
-		if (!winner) {
-			winner = has3Vertical();
+	private RowOf3Event detect3InARow() {
+		RowOf3Event event = null;
+		event = has3Horizontal();
+		if (event == null) {
+			event = has3Vertical();
 		}
-		if (!winner) {
-			winner = has3DiagonalUp();
+		if (event == null) {
+			event = has3DiagonalUp();
 		}
-		if (!winner) {
-			winner = has3DiagonalDown();
+		if (event == null) {
+			event = has3DiagonalDown();
 		}
-		return winner;
+		return event;
 	}
 	
 	/**
 	 * detects whether there are 3 in a row, horizontally, no matter from whom.
 	 * @return true if there is a winner, otherwise false
 	 */
-	private boolean has3Horizontal() {
-		boolean winner = false;
+	private RowOf3Event has3Horizontal() {
+		RowOf3Event event = null;
 		for (int row = 0; row < grid.getRows(); row ++) {
 			for (int col = 0; col < grid.getCols() -2; col ++) {
 				if (grid.getValue(row, col) != CellValue.EMPTY) {
 					if (grid.getValue(row, col) == grid.getValue(row, col + 1) && grid.getValue(row, col) == grid.getValue(row, col + 2)) {
-						winner = true;
+						event = new RowOf3Event(grid.getValue(row, col))
+							.withCell1(row, col)
+							.withCell2(row, col + 1)
+							.withCell3(row, col + 2);
 						break;
 					}
 				}
 			}
-			if (winner) {
+			if (event != null) {
 				break;
 			}
 		}
-		return winner;
+		return event;
 	}
 	
 	/**
 	 * detects whether there are 3 in a row, vertically, no matter from whom
 	 * @return true if there is a winner, otherwise false
 	 */
-	private boolean has3Vertical() {
-		boolean winner = false;
+	private RowOf3Event has3Vertical() {
+		RowOf3Event event = null;
 		for (int col = 0; col < grid.getCols(); col ++) {
 			for (int row = 0; row < grid.getRows() -2; row ++) {
 				if (grid.getValue(row, col) != CellValue.EMPTY) {
 					if (grid.getValue(row, col) == grid.getValue(row + 1, col) && grid.getValue(row, col) == grid.getValue(row + 2, col)) {
-						winner = true;
+						event = new RowOf3Event(grid.getValue(row, col))
+							.withCell1(row, col)
+							.withCell2(row + 1, col)
+							.withCell3(row + 2, col);
 						break;
 					}
 				}
 			}
-			if (winner) {
+			if (event != null) {
 				break;
 			}
 		}
-		return winner;
+		return event;
 		
 	}
 	
@@ -660,45 +725,51 @@ public class GameController {
 	 * detects whether there are 3 in a row, diagonally up (bottom left to top right), no matter from whom.
 	 * @return true if there is a winner, otherwise false
 	 */
-	private boolean has3DiagonalUp() {
-		boolean winner = false;
+	private RowOf3Event has3DiagonalUp() {
+		RowOf3Event event = null;
 		for (int row = grid.getRows() - 1; row - 2 >= 0; row --) {
 			for (int col = 0; col + 2 < grid.getCols(); col ++) {
 				if (grid.getValue(row, col) != CellValue.EMPTY) {
 					if (grid.getValue(row, col) == grid.getValue(row - 1, col + 1) && grid.getValue(row, col) == grid.getValue(row -2, col + 2)) {
-						winner = true;
+						event = new RowOf3Event(grid.getValue(row, col))
+							.withCell1(row, col)
+							.withCell2(row - 1, col + 1)
+							.withCell3(row - 2, col + 2);
 						break;
 					}
 				}
 			}
-			if (winner) {
+			if (event != null) {
 				break;
 			}
 		}
 		
-		return winner;
+		return event;
 	}
 	
 	/**
 	 * detects whether there are 3 in a row, diagonally down (top left to bottom right), no matter from whom.
 	 * @return true if there is a winner, otherwise false
 	 */
-	private boolean has3DiagonalDown() {
-		boolean winner = false;
+	private RowOf3Event has3DiagonalDown() {
+		RowOf3Event event = null;
 		for (int row = 0; row < grid.getRows() - 2; row ++) {
 			for (int col = 0; col < grid.getCols() - 2; col ++) {
 				if (grid.getValue(row, col) != CellValue.EMPTY) {
 					if (grid.getValue(row, col) == grid.getValue(row + 1, col + 1) && grid.getValue(row, col) == grid.getValue(row + 2, col + 2)) {
-						winner = true;
+						event = new RowOf3Event(grid.getValue(row, col))
+							.withCell1(row, col)
+							.withCell2(row + 1, col + 1)
+							.withCell3(row + 2, col + 2);
 						break;
 					}
 				}
 			}
-			if (winner) {
+			if (event != null) {
 				break;
 			}
 		}
-		return winner;	
+		return event;	
 	}
 	
 	/**
@@ -722,5 +793,26 @@ public class GameController {
 			strBuf.append(computerWins);
 		}
 		return strBuf.toString();
+	}
+
+	/**
+	 * returns the score of the player - the number of games won.
+	 * @return the number of games won by the player.
+	 */
+	public int getPlayerWins() {
+		return playerWins;
+	}
+
+	/**
+	 * returns the score of the computer - the number of games won.
+	 * @return the number of games won by the computer.
+	 */
+	public int getComputerWins() {
+		return computerWins;
+	}
+
+
+	public Level getLevel() {
+		return level;
 	}
 }

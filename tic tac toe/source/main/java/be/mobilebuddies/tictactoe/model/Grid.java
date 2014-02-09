@@ -133,9 +133,9 @@ public class Grid {
 					full = false;
 					break;
 				}
-				if (!full) {
-					break;
-				}
+			}
+			if (!full) {
+				break;
 			}
 		}
 		return full;
