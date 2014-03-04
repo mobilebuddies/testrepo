@@ -28,4 +28,14 @@ public enum Level {
 		}
 		return found;
 	}
+	
+	public static Level getByLabel(String label) {
+		Level found = null;
+		for (Level l : Level.values()) {
+			if (label.equals(l.label)) {
+				found = l;
+			}
+		}
+		return found;
+	}
 }

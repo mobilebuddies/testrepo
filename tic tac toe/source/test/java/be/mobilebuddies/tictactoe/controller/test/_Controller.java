@@ -15,6 +15,7 @@ import org.junit.Test;
 import be.mobilebuddies.tictactoe.controller.GameController;
 import be.mobilebuddies.tictactoe.controller.Level;
 import be.mobilebuddies.tictactoe.controller.GridCellEvent;
+import be.mobilebuddies.tictactoe.controller.TicTacToeEvent;
 import be.mobilebuddies.tictactoe.model.CellValue;
 import be.mobilebuddies.tictactoe.model.Grid;
 
@@ -521,7 +522,8 @@ public class _Controller {
 			@Override
 			public void update(Observable gameController, Object event) {
 				assertNotNull(event);
-				GridCellEvent ev = (GridCellEvent) event;
+				TicTacToeEvent tev = (TicTacToeEvent)event;
+				GridCellEvent ev = tev.getGridCellEvent();
 				assertEquals(CellValue.COMPUTER, ev.getvalue());
 				assertEquals(0, ev.getRow());
 				assertEquals(2, ev.getCol());
@@ -540,4 +542,10 @@ public class _Controller {
 		ctrl = null;
 	}
 
+	@Test
+	public void testLevel() {
+		String levelVal = "Intermediate";
+		Level level = Level.getByLabel(levelVal);
+		assertEquals(level, Level.INTERMEDIATE);
+	}
 }
