@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Italiano</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="kies_test">Instellingen</string>
+    <string name="vertalingen">Vertalingen</string>
+    <string name="vertalingen_afleidingen">Vertalingen en afleidingen</string>
+    <string name="vervoegingen">Vervoegingen</string>
+    <string name="vertalingen_vervoegingen">Vertalingen en vervoegingen</string>
+    <string name="aantal_oefeningen">Aantal oefeningen:</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="ok">OK</string>
+    <string name="opgave">Opgave</string>
+    <string name="vraag">Vraag:</string>
+    <string name="oplossing">Oplossing</string>
+    <string name="vorige_vraag">Vorige vraag</string>
+    <string name="goedkeuren">Goedkeuren</string>
+    <string name="het_antwoord_is">Het antwoord is:</string>
+    <string name="score">Score:</string>
+    <string name="sluiten">Sluiten</string>
+    <string name="fout">Fout</string>
+    <string name="title_activity_edit_preferences">EditPreferences</string>
+
+</resources>
