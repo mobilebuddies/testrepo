@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">Italiano</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Instellingen</string>
     <string name="hello_world">Hello world!</string>
     <string name="kies_test">Instellingen</string>
     <string name="vertalingen">Vertalingen</string>

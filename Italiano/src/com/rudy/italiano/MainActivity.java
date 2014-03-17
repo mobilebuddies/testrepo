@@ -63,7 +63,7 @@ public class MainActivity extends Activity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		// getMenuInflater().inflate(R.menu.main, menu);
 		// return true;
-		menu.add(Menu.NONE, EDIT_ID, Menu.NONE, "Edit Prefs").setIcon(R.drawable.ic_launcher)
+		menu.add(Menu.NONE, EDIT_ID, Menu.NONE, "Instellingen").setIcon(R.drawable.ic_launcher)
 				.setAlphabeticShortcut('e');
 		return (super.onCreateOptionsMenu(menu));
 	}
@@ -74,6 +74,16 @@ public class MainActivity extends Activity {
 		super.onResume();
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		((EditText) findViewById(R.id.edtAantalOef)).setText(prefs.getString("text", "25"));
+		String test = prefs.getString("list", "VERTALINGEN");
+		if (test.equals("VERTALINGEN")) {
+			((RadioButton) findViewById(R.id.radVertalingen)).setChecked(true);
+		} else if (test.equals("MET_AFLEIDINGEN")) {
+			((RadioButton) findViewById(R.id.radVertAfleidingen)).setChecked(true);
+		} else if (test.equals("VERVOEGINGEN")) {
+			((RadioButton) findViewById(R.id.radVervoegingen)).setChecked(true);
+		} else {
+			((RadioButton) findViewById(R.id.radVertVervoegingen)).setChecked(true);
+		}
 	}
 
 	@Override
