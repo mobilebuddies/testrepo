@@ -13,4 +13,18 @@
         android:summary="Pick a tone, any tone"
         android:title="Ringtone Preference" />
 
+    <ListPreference
+        android:dialogTitle="Kies een test"
+        android:entries="@array/test"
+        android:entryValues="@array/test_codes"
+        android:key="list"
+        android:summary="Klik voor mogelijkheden"
+        android:title="Kies een test" />
+
+    <EditTextPreference
+        android:dialogTitle="@string/aantal_oefeningen"
+        android:key="text"
+        android:summary="@string/invoerveld"
+        android:title="@string/aantal_oefeningen" />
+
 </PreferenceScreen>

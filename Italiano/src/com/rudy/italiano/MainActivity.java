@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.opengl.Visibility;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -65,6 +66,14 @@ public class MainActivity extends Activity {
 		menu.add(Menu.NONE, EDIT_ID, Menu.NONE, "Edit Prefs").setIcon(R.drawable.ic_launcher)
 				.setAlphabeticShortcut('e');
 		return (super.onCreateOptionsMenu(menu));
+	}
+
+	@Override
+	protected void onResume() {
+		SharedPreferences prefs;
+		super.onResume();
+		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		((EditText) findViewById(R.id.edtAantalOef)).setText(prefs.getString("text", "25"));
 	}
 
 	@Override

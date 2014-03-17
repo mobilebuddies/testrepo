@@ -22,6 +22,7 @@
     <string name="score">Score:</string>
     <string name="sluiten">Sluiten</string>
     <string name="fout">Fout</string>
-    <string name="title_activity_edit_preferences">EditPreferences</string>
+    <string name="invoerveld">Klik hier voor invoerveld</string>
+    <string name="title_activity_edit_preferences">Instellingen</string>
 
 </resources>
