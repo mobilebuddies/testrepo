@@ -39,8 +39,8 @@ public class TestController {
 	}
 
 	public void ReadSettings(SharedPreferences aPrefs) {
-		this.dataPath = aPrefs.getString("dataPath", "/mnt/sdcard/Data/Italiano/");
-//		this.dataPath = aPrefs.getString("dataPath", "/storage/extSdCard/Data/Italiano/");
+//		this.dataPath = aPrefs.getString("dataPath", "/mnt/sdcard/Data/Italiano/");
+		this.dataPath = aPrefs.getString("dataPath", "/storage/extSdCard/Data/Italiano/");
 	}
 
 	public ArrayList<TestData> getDataArray() {

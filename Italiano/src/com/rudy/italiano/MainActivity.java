@@ -40,14 +40,12 @@ public class MainActivity extends Activity {
 		// prefs = getPreferences(MODE_PRIVATE);
 		prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		TestController.getInstance().ReadSettings(prefs);
-		((Button) findViewById(R.id.btnStop)).setEnabled(false);
 		((Button) findViewById(R.id.btnVolgende)).setEnabled(false);
 		((Button) findViewById(R.id.btnGoedkeuren)).setEnabled(false);
 		((ImageButton) findViewById(R.id.imgGoedFout)).setEnabled(false);
 		((ImageButton) findViewById(R.id.imgScore)).setEnabled(false);
 		((TextView) findViewById(R.id.txtVraag)).setText("Kies een test en druk op de Start knop");
 		this.InitOplossing();
-		((EditText) findViewById(R.id.edtAantalOef)).requestFocus();
 		try {
 			// this.maxAantal =
 			// TestController.getInstance().ReadTestData(TestType.VERVOEGINGEN);
@@ -71,18 +69,31 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onResume() {
 		SharedPreferences prefs;
+
 		super.onResume();
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		((EditText) findViewById(R.id.edtAantalOef)).setText(prefs.getString("text", "25"));
 		String test = prefs.getString("list", "VERTALINGEN");
 		if (test.equals("VERTALINGEN")) {
-			((RadioButton) findViewById(R.id.radVertalingen)).setChecked(true);
+			this.testType = TestType.VERTALINGEN;
 		} else if (test.equals("MET_AFLEIDINGEN")) {
-			((RadioButton) findViewById(R.id.radVertAfleidingen)).setChecked(true);
+			this.testType = TestType.MET_AFLEIDINGEN;
 		} else if (test.equals("VERVOEGINGEN")) {
-			((RadioButton) findViewById(R.id.radVervoegingen)).setChecked(true);
+			this.testType = TestType.VERVOEGINGEN;
 		} else {
-			((RadioButton) findViewById(R.id.radVertVervoegingen)).setChecked(true);
+			this.testType = TestType.ALLES;
+		}
+
+		try {
+			this.aantal = TestController.getInstance().ReadTestData(this.testType);
+
+			((Button) findViewById(R.id.btnVolgende)).setEnabled(true);
+			((Button) findViewById(R.id.btnGoedkeuren)).setEnabled(false);
+			this.InitOplossing();
+			this.teller = 0;
+			this.score = 0;
+			this.OpvullenOpdracht();
+		} catch (Exception e) {
+			this.showAlert(e.getMessage());
 		}
 	}
 
@@ -107,47 +118,10 @@ public class MainActivity extends Activity {
 	}
 
 	public void btnStartClick(View view) {
-		int maxAantal = 0;
-
-		if (((RadioButton) findViewById(R.id.radVertalingen)).isChecked()) {
-			this.testType = TestType.VERTALINGEN;
-		} else if (((RadioButton) findViewById(R.id.radVertAfleidingen)).isChecked()) {
-			this.testType = TestType.MET_AFLEIDINGEN;
-		} else if (((RadioButton) findViewById(R.id.radVervoegingen)).isChecked()) {
-			this.testType = TestType.VERVOEGINGEN;
-		} else {
-			this.testType = TestType.ALLES;
-		}
-
-		this.aantal = Integer.parseInt(((EditText) findViewById(R.id.edtAantalOef)).getText().toString());
-
-		try {
-			maxAantal = TestController.getInstance().ReadTestData(this.testType);
-
-			if (this.aantal <= maxAantal) {
-				((Button) findViewById(R.id.btnStart)).setEnabled(false);
-				((Button) findViewById(R.id.btnStop)).setEnabled(true);
-				((Button) findViewById(R.id.btnVolgende)).setEnabled(true);
-				((Button) findViewById(R.id.btnGoedkeuren)).setEnabled(false);
-				this.InitOplossing();
-				this.teller = 0;
-				this.score = 0;
-				this.OpvullenOpdracht();
-			} else {
-				this.showAlert("Het aantal oefeningen is te groot, verminder het aantal om verder te gaan");
-			}
-		} catch (Exception e) {
-			this.showAlert(e.getMessage());
-		}
 
 	}
 
 	public void btnStopClick(View view) {
-		((Button) findViewById(R.id.btnVolgende)).setEnabled(false);
-		((Button) findViewById(R.id.btnStart)).setEnabled(true);
-		((Button) findViewById(R.id.btnStop)).setEnabled(false);
-		((Button) findViewById(R.id.btnGoedkeuren)).setEnabled(false);
-		((TextView) findViewById(R.id.txtVraag)).setText("Kies een test en druk op de Start knop");
 	}
 
 	public void btnVolgendeClick(View view) {
@@ -174,13 +148,12 @@ public class MainActivity extends Activity {
 					.setImageResource(this.score > (this.teller / 2.0) ? R.drawable.ic_action_good
 							: R.drawable.ic_action_bad);
 			((ImageButton) findViewById(R.id.imgGoedFout)).setVisibility(View.VISIBLE);
+			((ImageButton) findViewById(R.id.imgScore)).setVisibility(View.VISIBLE);
 
 			if (this.teller < this.aantal) {
 				this.OpvullenOpdracht();
 			} else {
 				((Button) findViewById(R.id.btnVolgende)).setEnabled(false);
-				((Button) findViewById(R.id.btnStart)).setEnabled(true);
-				((Button) findViewById(R.id.btnStop)).setEnabled(false);
 			}
 		} catch (Exception e) {
 			this.showAlert(e.getMessage());
@@ -197,6 +170,7 @@ public class MainActivity extends Activity {
 				.setImageResource(this.score > (this.teller / 2.0) ? R.drawable.ic_action_good
 						: R.drawable.ic_action_bad);
 		((ImageButton) findViewById(R.id.imgGoedFout)).setVisibility(View.VISIBLE);
+		((ImageButton) findViewById(R.id.imgScore)).setVisibility(View.VISIBLE);
 		((Button) findViewById(R.id.btnGoedkeuren)).setEnabled(false);
 		((EditText) findViewById(R.id.edtAntwoord)).requestFocus();
 	}
