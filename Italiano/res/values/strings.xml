@@ -23,6 +23,7 @@
     <string name="sluiten">Sluiten</string>
     <string name="fout">Fout</string>
     <string name="invoerveld">Klik hier voor invoerveld</string>
+    <string name="data_pad">Directory met de XML-bestanden</string>
     <string name="title_activity_edit_preferences">Instellingen</string>
 
 </resources>

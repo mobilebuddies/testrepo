@@ -10,9 +10,9 @@
         android:title="Kies een test" />
 
     <EditTextPreference
-        android:dialogTitle="@string/aantal_oefeningen"
-        android:key="text"
+        android:dialogTitle="@string/data_pad"
+        android:key="dataPath"
         android:summary="@string/invoerveld"
-        android:title="@string/aantal_oefeningen" />
+        android:title="@string/data_pad" />
 
 </PreferenceScreen>
