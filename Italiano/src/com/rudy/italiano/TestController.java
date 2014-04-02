@@ -21,9 +21,9 @@ import android.util.Log;
 public class TestController {
 	private static TestController instance = null;
 	private int aantalIds;
+	private String dataPath; 
 	private ArrayList<TestData> dataArray;
 	private Random random;
-	private String dataPath;
 	private ArrayList<Integer> historiek;
 
 	protected TestController() {
@@ -38,6 +38,11 @@ public class TestController {
 		return instance;
 	}
 
+	public void SetDataPath(String aDataPath) {
+		// TODO Auto-generated method stub
+		this.dataPath = aDataPath;
+	}
+	
 	public void ReadSettings(SharedPreferences aPrefs) {
 		this.dataPath = aPrefs.getString("dataPath", "/mnt/sdcard/Data/Italiano/");
 //		this.dataPath = aPrefs.getString("dataPath", "/storage/extSdCard/Data/Italiano/");

@@ -26,20 +26,15 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity {
 	private final static int EDIT_ID = 1;
-	TestType testType;
-	int aantal, teller, score;
-	TestData opdracht;
+	private TestType testType;
+	private int aantal, teller, score;
+	private TestData opdracht;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		SharedPreferences prefs;
-		TestData testData;
-
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		// prefs = getPreferences(MODE_PRIVATE);
-		prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		TestController.getInstance().ReadSettings(prefs);
+
 		((Button) findViewById(R.id.btnVolgende)).setEnabled(false);
 		((Button) findViewById(R.id.btnGoedkeuren)).setEnabled(false);
 		((ImageButton) findViewById(R.id.imgGoedFout)).setEnabled(false);
@@ -69,9 +64,12 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onResume() {
 		SharedPreferences prefs;
+		String dataPath;
 
 		super.onResume();
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		dataPath = prefs.getString("dataPath", "/mnt/sdcard/Data/Italiano/");
+		TestController.getInstance().SetDataPath(dataPath);
 		String test = prefs.getString("list", "VERTALINGEN");
 		if (test.equals("VERTALINGEN")) {
 			this.testType = TestType.VERTALINGEN;
